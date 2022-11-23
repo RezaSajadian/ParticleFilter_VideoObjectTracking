@@ -1,9 +1,16 @@
 
-from ParticleFilter_Object_with_mouse_click import ParticleFilter
+import os
+from ParticleFilter_Module import ParticleFilter
 
-config_file = "/Users/rezasajadian/storage/Training/deep_learning/computer-vision/Object_Tracking_Using_Particle_Filters/ParticleFilterObjectTracking_class/configurations.ini"
+conf_file_name = "configurations.ini"
+cwd = os.getcwd()
+config_file = os.path.join(cwd, conf_file_name)
+
+if os.path.isfile(config_file):
+    print("Main, Config file exists.")
 
 pf = ParticleFilter(config_file)
+
 pf.run()
 
 
