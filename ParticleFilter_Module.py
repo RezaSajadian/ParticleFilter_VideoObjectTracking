@@ -15,36 +15,44 @@ class ParticleFilter():
         # video file parameters
         file_name = CONFIGURATIONS["VIDEO_PROPERTIES"]['ADDRESS']
         self.VFILENAME = os.path.join(os.getcwd(), file_name)
-        # print("Full path: {}".format(self.VFILENAME))
 
-        self.VIDEO_HEIGHT = int(CONFIGURATIONS['VIDEO_PROPERTIES']['VIDEO_HEIGHT'])
-        self.VIDEO_WIDTH = int(CONFIGURATIONS['VIDEO_PROPERTIES']['VIDEO_WIDTH'])
+        # getting the video properties
+        self.video_height_width_getter(self.VFILENAME)
 
         # Particle parameters
         self.NUM_PARTICLES = int(CONFIGURATIONS['PARTICLE_PARAMETERS']['NUM_PARTICLES'])
-        self.VEL_RANGE =float(CONFIGURATIONS['PARTICLE_PARAMETERS']['VEL_RANGE'])
+        self.VEL_RANGE = float(CONFIGURATIONS['PARTICLE_PARAMETERS']['VEL_RANGE'])
 
         # Noise parameters
         self.POS_SIGMA = float(CONFIGURATIONS['NOISE_PARAMETERS']['POS_SIGMA'])
         self.VEL_SIGMA = float(CONFIGURATIONS['NOISE_PARAMETERS']['VEL_SIGMA'])
 
-        self.TARGET_COLOUR = np.array( (165, 74, 38) )
+        # self.TARGET_COLOUR = np.array((165, 74, 38))
+        self.TARGET_COLOUR = np.array((135, 44, 30))
+        # self.TARGET_COLOUR = None
+        print(f"Target Color in the beginning :{self.TARGET_COLOUR}")
         
         cv2.namedWindow("Particle Filter for Object Tracking")
         cv2.setMouseCallback('Particle Filter for Object Tracking',self.mouseRGB)
         
 
+    def video_height_width_getter(self, fileName):
+        self.video = cv2.VideoCapture(fileName)
+        self.VIDEO_WIDTH = self.video.get(cv2.CAP_PROP_FRAME_WIDTH)
+        self.VIDEO_HEIGHT  = self.video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+
     # reading the video file and yielding frames by OpenCV
     def get_frames(self, fileName):
-        video = cv2.VideoCapture(fileName)
-        while video.isOpened():
+        self.video = cv2.VideoCapture(fileName)
+        while self.video.isOpened():
             global frame
-            ret, frame = video.read()
+            ret, frame = self.video.read()
             if ret:
                 yield frame
             else:
                 break
-        video.release()
+        self.video.release()
         yield None
 
 
@@ -90,8 +98,8 @@ class ParticleFilter():
             (particles[:, 1] == self.VIDEO_HEIGHT - 1)
         ] == 0.0
 
-        # the power of the weights could go higher, and it heavily affects
-        # the behaviour of the particles and their convergence right after init
+        # the power of the weights could go higher, and it heavily affects the
+        # behaviour of the particles and their convergence speed, right after initiation.
         weights = weights ** 4
         return weights
 
@@ -136,13 +144,15 @@ class ParticleFilter():
                 return True
         return False
 
+
     # gets the click point pixel information for the tracker.
     def mouseRGB(self, event,x,y,flags,param):
         if event == cv2.EVENT_LBUTTONDOWN:
             colorsB = frame[y,x,0]
             colorsG = frame[y,x,1]
             colorsR = frame[y,x,2]
-            self.TARGET_COLOUR = np.array( (colorsB, colorsG, colorsR) )
+            self.TARGET_COLOUR = np.array((colorsB, colorsG, colorsR))
+            print(f"click color:{self.TARGET_COLOUR}")
 
 
     def run(self):
