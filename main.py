@@ -11,7 +11,3 @@ if os.path.isfile(config_file):
 pf = ParticleFilter(config_file)
 
 pf.run()
-
-
-
-
