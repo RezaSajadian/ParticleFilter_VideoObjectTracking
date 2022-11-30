@@ -3,13 +3,15 @@ import numpy as np
 import cv2
 import os
 from configparser import ConfigParser
-np.random.seed(0)
+
 
 class ParticleFilter():
     def __init__(self, config_file):
         try:
+
+            self.base_path = os.getcwd()
             # creating the module's logger
-            self.log = logging.getLogger(__name__)
+            self.log = self.logging()
 
             # fetching the required parameters from the configuration file
             CONFIGURATIONS = ConfigParser()
@@ -22,6 +24,8 @@ class ParticleFilter():
             # getting the video properties
             self.video_height_width_getter(self.VFILENAME)
 
+            self.set_random_seed(int(CONFIGURATIONS['MODEL_PARAMETERS']['RANDOM_SEED']))
+
             # Particle parameters
             self.NUM_PARTICLES = int(CONFIGURATIONS['PARTICLE_PARAMETERS']['NUM_PARTICLES'])
             self.VEL_RANGE = float(CONFIGURATIONS['PARTICLE_PARAMETERS']['VEL_RANGE'])
@@ -31,7 +35,7 @@ class ParticleFilter():
             self.VEL_SIGMA = float(CONFIGURATIONS['NOISE_PARAMETERS']['VEL_SIGMA'])
 
             # self.TARGET_COLOUR = np.array((165, 74, 38))
-            self.TARGET_COLOUR = np.array((135, 44, 30))
+            self.TARGET_COLOUR = np.array((127,62,44))
             # self.TARGET_COLOUR = None
             print(f"Target Color in the beginning :{self.TARGET_COLOUR}")
             
@@ -42,6 +46,29 @@ class ParticleFilter():
 
         except Exception as ex:
             self.log.error(f"ParticleFilter Module - Object init ended up in: {ex}")
+
+
+    def set_random_seed(self, seed_value):
+        try:
+            np.random.seed(seed_value)
+        except Exception as ex:
+            self.log.error(f"ParticleFilter Module - set_random_seed: {ex}")
+
+    def logging(self):
+        try:
+            logfile_address = os.path.join(self.base_path, "ParticleFilter.log")
+            # check whether the logfile exists
+            if not os.path.isfile(logfile_address):
+                with open(logfile_address, mode='a'): pass
+
+            logger = logging.getLogger(__name__)
+            logging.basicConfig(filename=logfile_address,
+                                level=os.environ.get("LOGLEVEL", "DEBUG"),
+                                format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                                datefmt='%H:%M:%S')
+            return logger
+        except Exception as ex:
+            self.log.error(f"ParticleFilter Module - logging: {ex}")
 
     def video_height_width_getter(self, fileName):
         try:
@@ -76,7 +103,7 @@ class ParticleFilter():
             particles[:, -2:] -= self.VEL_RANGE / 2.0
             return particles
         except Exception as ex:
-            self.log.error
+            self.log.error(f"ParticleFilter Module - initialze_particles: {ex}")
 
 
     # considering the Velocity feature for the particles
